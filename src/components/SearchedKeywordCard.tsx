@@ -1,43 +1,41 @@
 import React from "react";
 import styled from "styled-components";
-import { Icon } from "./Icon";
-import { ISearch } from "../types";
 import { SearchedKeywordItem } from "./SearchedKeywordItem";
 
 interface SearchedKeywordCardProps {
-  recommendedSearchKeywordList: ISearch[];
-  cachedSearchKeywordList: ISearch[];
+  recommendedData: string[];
+  cachedData: string[];
   onClickSearchedKeyword: (searchedKeyword: string) => void;
 }
 
 export const SearchedKeywordCard = ({
-  recommendedSearchKeywordList,
-  cachedSearchKeywordList,
+  recommendedData,
+  cachedData,
   onClickSearchedKeyword,
 }: SearchedKeywordCardProps) => {
   return (
     <StyledSearchedKeywordCard>
-      {cachedSearchKeywordList.length > 0 && (
+      {cachedData.length > 0 && (
         <>
           <div className="searched-keyword-label">최근 검색어</div>
-          {cachedSearchKeywordList.map((keyword: ISearch) => (
+          {cachedData.map((keyword: string) => (
             <SearchedKeywordItem
-              key={keyword.sickCd}
-              label={keyword.sickNm}
-              onClickItem={() => onClickSearchedKeyword(keyword.sickNm)}
+              key={keyword}
+              label={keyword}
+              onClickItem={() => onClickSearchedKeyword(keyword)}
             />
           ))}
           <div className="searched-keyword-line" />
         </>
       )}
       <div className="searched-keyword-label">추천 검색어</div>
-      {recommendedSearchKeywordList.length > 0 ? (
+      {recommendedData.length > 0 ? (
         <>
-          {recommendedSearchKeywordList.map((keyword: ISearch) => (
+          {recommendedData.map((keyword: string) => (
             <SearchedKeywordItem
-              key={keyword.sickCd}
-              label={keyword.sickNm}
-              onClickItem={() => onClickSearchedKeyword(keyword.sickNm)}
+              key={keyword}
+              label={keyword}
+              onClickItem={() => onClickSearchedKeyword(keyword)}
             />
           ))}
         </>

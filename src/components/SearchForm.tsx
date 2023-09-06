@@ -2,27 +2,23 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { SearchedKeywordCard } from "./SearchedKeywordCard";
 import { Icon } from "./Icon";
-import { ISearch } from "../types";
+import { useSearchActions, useSearchVals } from "../providers/SearchProvider";
 
 interface SearchFormProps {
   placeHolder?: string;
-  onFocusSearchForm?: () => void;
-  onClickSearchStrDeleteBtn?: (sickText: string) => void;
-  onInputSearchForm: (sickText: string) => void;
-  onSearch: (sickText: string) => void;
+  onSearch: (searchText: string) => void;
 }
 
 export const SearchForm = ({
   placeHolder = "검색어를 입력해주세요.",
-  onFocusSearchForm,
-  onInputSearchForm,
   onSearch,
-  onClickSearchStrDeleteBtn,
 }: SearchFormProps) => {
   const [isFocusSearchForm, setIsFocusSearchForm] = useState<boolean>(false);
   const searchFormRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [sickText, setSickText] = useState<string>("");
+
+  const { searchText, recommendedData, cachedData } = useSearchVals();
+  const { typeSearchedKeyword, initSearchedKeyword } = useSearchActions();
 
   useEffect(() => {
     const onOutsideClickedSearchForm = (event: MouseEvent): void => {
@@ -40,22 +36,10 @@ export const SearchForm = ({
   }, [searchFormRef]);
 
   const openSearchedKeywordCard = () => {
-    if (onFocusSearchForm) onFocusSearchForm();
     if (!isFocusSearchForm) setIsFocusSearchForm(true);
   };
 
-  const isNoSearchText = !isFocusSearchForm && sickText.length === 0;
-
-  const typeSearchedKeyword = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onInputSearchForm(e.target.value);
-    setSickText(e.target.value);
-  };
-
-  const initSearchedKeyword = (sickText: string) => {
-    if (onClickSearchStrDeleteBtn) onClickSearchStrDeleteBtn(sickText);
-    setSickText("");
-    searchInputRef?.current?.focus();
-  };
+  const isNoSearchText = !isFocusSearchForm && searchText.length === 0;
 
   return (
     <StyledSearchForm ref={searchFormRef} onClick={openSearchedKeywordCard}>
@@ -66,23 +50,25 @@ export const SearchForm = ({
         ].join(" ")}
       >
         {isNoSearchText ? (
-          <div className="sick-input-placeholder-wrapper">
+          <div className="input-placeholder-wrapper">
             <Icon src="/search.svg" color="#A7AFB7" size="16px" />
-            <span className="sick-input-placeholder">{placeHolder}</span>
+            <span className="input-placeholder">{placeHolder}</span>
           </div>
         ) : (
-          <div className="sick-input-wrapper">
+          <div className="input-wrapper">
             <input
               autoFocus
               ref={searchInputRef}
               type="text"
-              value={sickText}
+              value={searchText}
               onChange={typeSearchedKeyword}
             />
             {isFocusSearchForm && (
               <div
                 className="delete-btn"
-                onClick={() => initSearchedKeyword(sickText)}
+                onClick={() =>
+                  initSearchedKeyword(() => searchInputRef?.current?.focus())
+                }
               >
                 <Icon src="/delete.svg" color="#ffffff" size="10px" />
               </div>
@@ -90,17 +76,19 @@ export const SearchForm = ({
           </div>
         )}
 
-        <div className="search-btn" onClick={() => onSearch(sickText)}>
+        <div className="search-btn" onClick={() => onSearch(searchText)}>
           <Icon src="/search.svg" color="#ffffff" />
         </div>
       </div>
-      <div className="searched-keyword-card-wrapper">
-        <SearchedKeywordCard
-          recommendedSearchKeywordList={[{ sickNm: "병", sickCd: "0" }]}
-          cachedSearchKeywordList={[{ sickNm: "병", sickCd: "0" }]}
-          onClickSearchedKeyword={onSearch}
-        />
-      </div>
+      {isFocusSearchForm && (
+        <div className="searched-keyword-card-wrapper">
+          <SearchedKeywordCard
+            recommendedData={recommendedData}
+            cachedData={cachedData}
+            onClickSearchedKeyword={onSearch}
+          />
+        </div>
+      )}
     </StyledSearchForm>
   );
 };
@@ -122,10 +110,10 @@ const StyledSearchForm = styled.section`
       border-color: #007be9;
     }
 
-    .sick-input-placeholder-wrapper {
+    .input-placeholder-wrapper {
       display: flex;
       align-items: center;
-      .sick-input-placeholder {
+      .input-placeholder {
         margin-left: 12px;
         color: #a7afb7;
         cursor: text;
@@ -134,7 +122,7 @@ const StyledSearchForm = styled.section`
       }
     }
 
-    .sick-input-wrapper {
+    .input-wrapper {
       display: flex;
       align-items: center;
       input {

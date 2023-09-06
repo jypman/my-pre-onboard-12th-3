@@ -1,4 +1,4 @@
 import { setupWorker } from "msw";
-import { searchedKeywordHandler } from "./searchedKeywordHandler";
+import { sickKeywordHandler } from "./sickKeywordHandler";
 
-export const worker = setupWorker(...searchedKeywordHandler());
+export const worker = setupWorker(...sickKeywordHandler());

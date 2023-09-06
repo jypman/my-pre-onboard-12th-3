@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { SearchForm } from "../components/SearchForm";
+import { SearchProvider } from "../providers/SearchProvider";
 
 export const Home = () => {
   return (
@@ -12,13 +13,12 @@ export const Home = () => {
           온라인으로 참여하기
         </h2>
         <div className="search-form-wrapper">
-          <SearchForm
-            placeHolder="질환명을 입력해주세요."
-            onFocusSearchForm={() => {}}
-            onSearch={() => {}}
-            onInputSearchForm={() => {}}
-            onClickSearchStrDeleteBtn={() => {}}
-          />
+          <SearchProvider searchType="sick">
+            <SearchForm
+              placeHolder="질환명을 입력해주세요."
+              onSearch={() => {}}
+            />
+          </SearchProvider>
         </div>
       </div>
     </StyledHome>
