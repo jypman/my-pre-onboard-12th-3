@@ -131,6 +131,7 @@ export const SearchProvider = ({
 
   const updateSearchList = async (searchText: string): Promise<void> => {
     try {
+      console.info("calling api");
       switch (searchType) {
         case "sick":
           const data = await getSickList(searchText);
