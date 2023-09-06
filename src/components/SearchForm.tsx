@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import styled from "styled-components";
 import { SearchedKeywordCard } from "./SearchedKeywordCard";
 import { Icon } from "./Icon";
@@ -13,31 +13,22 @@ export const SearchForm = ({
   placeHolder = "검색어를 입력해주세요.",
   onSearch,
 }: SearchFormProps) => {
-  const [isFocusSearchForm, setIsFocusSearchForm] = useState<boolean>(false);
-  const searchFormRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const { searchText, recommendedData, cachedData } = useSearchVals();
-  const { typeSearchedKeyword, initSearchedKeyword } = useSearchActions();
+  const {
+    searchText,
+    recommendedData,
+    cachedData,
+    isFocusSearchForm,
+    searchFormRef,
+  } = useSearchVals();
 
-  useEffect(() => {
-    const onOutsideClickedSearchForm = (event: MouseEvent): void => {
-      if (
-        searchFormRef.current &&
-        !searchFormRef.current.contains(event.target as Node)
-      ) {
-        setIsFocusSearchForm(false);
-      }
-    };
-    document.addEventListener("mousedown", onOutsideClickedSearchForm);
-    return () => {
-      document.removeEventListener("mousedown", onOutsideClickedSearchForm);
-    };
-  }, [searchFormRef]);
-
-  const openSearchedKeywordCard = () => {
-    if (!isFocusSearchForm) setIsFocusSearchForm(true);
-  };
+  const {
+    typeSearchedKeyword,
+    initSearchedKeyword,
+    cacheSearchedData,
+    openSearchedKeywordCard,
+  } = useSearchActions();
 
   const isNoSearchText = !isFocusSearchForm && searchText.length === 0;
 
@@ -76,7 +67,15 @@ export const SearchForm = ({
           </div>
         )}
 
-        <div className="search-btn" onClick={() => onSearch(searchText)}>
+        <div
+          className="search-btn"
+          onClick={() => {
+            if (searchText.length > 0) {
+              cacheSearchedData(searchText);
+              onSearch(searchText);
+            }
+          }}
+        >
           <Icon src="/search.svg" color="#ffffff" />
         </div>
       </div>

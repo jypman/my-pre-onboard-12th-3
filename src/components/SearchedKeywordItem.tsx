@@ -23,7 +23,6 @@ export const SearchedKeywordItem = ({
 };
 
 const StyledSearchedKeywordItem = styled.div`
-  width: 100%;
   &:hover {
     background-color: rgb(248, 249, 250);
   }
