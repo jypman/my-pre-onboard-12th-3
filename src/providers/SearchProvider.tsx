@@ -1,12 +1,7 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 import { getSickList } from "../api/sick";
 import { handleError } from "../api/http";
+import { debounce } from "../utils";
 
 export type SearchType = "sick";
 
@@ -82,18 +77,20 @@ export const SearchProvider = ({
     }
   };
 
-  const typeSearchedKeyword = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchText(e.target.value);
-      updateSearchList(e.target.value);
-    },
-    [],
-  );
+  const debouncedUpdateSearchList = debounce((searchText: string) => {
+    updateSearchList(searchText);
+  }, 200);
 
-  const initSearchedKeyword = useCallback((callback: Function) => {
+  const typeSearchedKeyword = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+    debouncedUpdateSearchList(e.target.value);
+  };
+
+  const initSearchedKeyword = (callback: Function) => {
     setSearchText("");
+    setRecommendedData([]);
     callback();
-  }, []);
+  };
 
   const searchVals = useMemo<ISearchVals>(
     () => ({ searchText, cachedData, recommendedData }),
