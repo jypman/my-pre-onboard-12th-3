@@ -2,19 +2,25 @@ import React from "react";
 import styled from "styled-components";
 import { Icon } from "./Icon";
 
-interface SearchedKeywordItemProps {
-  label: string;
+interface IStyledSearchedKeywordItem {
   onClickItem?: () => void;
+  focused?: boolean;
+}
+
+interface SearchedKeywordItemProps extends IStyledSearchedKeywordItem {
+  label: string;
 }
 
 export const SearchedKeywordItem = ({
   label,
   onClickItem,
+  focused = false,
 }: SearchedKeywordItemProps) => {
   return (
     <StyledSearchedKeywordItem
       className="searched-keyword-item"
       onClick={onClickItem}
+      focused={focused}
     >
       <Icon src="/search.svg" color="#A7AFB7" />
       {label}
@@ -22,7 +28,9 @@ export const SearchedKeywordItem = ({
   );
 };
 
-const StyledSearchedKeywordItem = styled.div`
+const StyledSearchedKeywordItem = styled.div<IStyledSearchedKeywordItem>`
+  background-color: ${(props) =>
+    props.focused ? "rgb(248, 249, 250)" : "#ffffff"};
   &:hover {
     background-color: rgb(248, 249, 250);
   }

@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { getSickList } from "../api/sick";
 import { handleError } from "../api/http";
 import { debounce } from "../utils";
@@ -18,12 +19,13 @@ interface ISearchVals {
   recommendedData: string[];
   isFocusSearchForm: boolean;
   searchFormRef: React.Ref<HTMLDivElement>;
+  focusedRecommendSearchItemIndex: number | null;
 }
 
 interface ISearchActions {
   typeSearchedKeyword: (e: React.ChangeEvent<HTMLInputElement>) => void;
   initSearchedKeyword: (callback: Function) => void;
-  cacheSearchedData: (searchedData: string) => void;
+  submitSearchKeyword: (searchedData: string) => void;
   openSearchedKeywordCard: () => void;
 }
 
@@ -33,11 +35,12 @@ const SearchValsCtx = createContext<ISearchVals>({
   recommendedData: [],
   isFocusSearchForm: false,
   searchFormRef: null,
+  focusedRecommendSearchItemIndex: null,
 });
 const SearchActionsCtx = createContext<ISearchActions>({
   typeSearchedKeyword: () => {},
   initSearchedKeyword: () => {},
-  cacheSearchedData: () => {},
+  submitSearchKeyword: () => {},
   openSearchedKeywordCard: () => {},
 });
 
@@ -71,18 +74,26 @@ export const SearchProvider = ({
   const [recommendedData, setRecommendedData] = useState<string[]>([]);
   const [cachedData, setCachedData] = useState<string[]>([]);
   const searchFormRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const MAX_DATA_LENGTH = 7;
 
   const cacheKeyPrefix = "CACHED_SEARCH_DATE_";
-  const second = 1000;
-  const minute = second * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
-  const EXPIRED_CACHED_SEARCH_TIME = day * 3;
+  const SECOND = 1000;
+  const MINUTE = SECOND * 60;
+  const HOUR = MINUTE * 60;
+  const DAY = HOUR * 24;
+  const EXPIRED_CACHED_SEARCH_TIME = DAY * 3;
 
   const cacheSearchedData = (searchedData: string): void => {
     const cacheKey = `${cacheKeyPrefix}${new Date().getTime().toString()}`;
     window.localStorage.setItem(cacheKey, searchedData);
+  };
+
+  const submitSearchKeyword = (searchedData: string): void => {
+    if (searchedData.length > 0) {
+      cacheSearchedData(searchedData);
+      navigate("/");
+    }
   };
 
   const getCacheData = (): string[] => {
@@ -97,6 +108,7 @@ export const SearchProvider = ({
         window.localStorage.removeItem(cacheKey);
         return;
       }
+
       cachedData.push(window.localStorage.getItem(cacheKey) as string);
     });
 
@@ -105,8 +117,7 @@ export const SearchProvider = ({
 
   useEffect(() => {
     if (isFocusSearchForm) {
-      const data = getCacheData();
-      setCachedData(data);
+      setCachedData(getCacheData());
     }
   }, [isFocusSearchForm]);
 
@@ -124,6 +135,53 @@ export const SearchProvider = ({
       document.removeEventListener("mousedown", onOutsideClickedSearchForm);
     };
   }, [searchFormRef]);
+
+  const [focusedRecommendSearchItemIndex, setFocusedRecommendSearchItemIndex] =
+    useState<number | null>(null);
+
+  useEffect(() => {
+    const onKeyboardFocusedRecommendSearchItemIndex = (
+      event: KeyboardEvent,
+    ): void => {
+      if (recommendedData.length === 0) return;
+      if (event.isComposing) return;
+      if (event.key === "Enter") {
+        return submitSearchKeyword(searchText);
+      }
+
+      let updateIndex: number | null = focusedRecommendSearchItemIndex;
+      if (event.key === "ArrowUp") {
+        updateIndex =
+          updateIndex === 0 || updateIndex === null
+            ? recommendedData.length - 1
+            : --updateIndex;
+      }
+      if (event.key === "ArrowDown") {
+        updateIndex =
+          (typeof updateIndex === "number" &&
+            updateIndex + 1 === recommendedData.length) ||
+          updateIndex === null
+            ? 0
+            : ++updateIndex;
+      }
+      if (updateIndex === focusedRecommendSearchItemIndex) return;
+
+      setFocusedRecommendSearchItemIndex(() => updateIndex);
+      setSearchText(
+        recommendedData.find((_, index: number) => index === updateIndex) ?? "",
+      );
+    };
+    document.addEventListener(
+      "keydown",
+      onKeyboardFocusedRecommendSearchItemIndex,
+    );
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        onKeyboardFocusedRecommendSearchItemIndex,
+      );
+    };
+  }, [recommendedData, focusedRecommendSearchItemIndex, searchText]);
 
   const openSearchedKeywordCard = () => {
     if (!isFocusSearchForm) setIsFocusSearchForm(true);
@@ -158,6 +216,7 @@ export const SearchProvider = ({
   const typeSearchedKeyword = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
+    setFocusedRecommendSearchItemIndex(null);
     setSearchText(e.target.value);
     debouncedUpdateSearchList(e.target.value);
   };
@@ -165,6 +224,7 @@ export const SearchProvider = ({
   const initSearchedKeyword = (callback: Function): void => {
     setSearchText("");
     setRecommendedData([]);
+    setFocusedRecommendSearchItemIndex(null);
     callback();
   };
 
@@ -175,8 +235,16 @@ export const SearchProvider = ({
       recommendedData,
       isFocusSearchForm,
       searchFormRef,
+      focusedRecommendSearchItemIndex,
     }),
-    [searchText, cachedData, recommendedData, isFocusSearchForm],
+    [
+      searchText,
+      cachedData,
+      recommendedData,
+      isFocusSearchForm,
+      searchFormRef,
+      focusedRecommendSearchItemIndex,
+    ],
   );
 
   const searchActions = useMemo<ISearchActions>(
@@ -184,7 +252,7 @@ export const SearchProvider = ({
       updateSearchList,
       typeSearchedKeyword,
       initSearchedKeyword,
-      cacheSearchedData,
+      submitSearchKeyword,
       openSearchedKeywordCard,
     }),
     [],

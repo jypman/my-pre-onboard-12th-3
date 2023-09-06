@@ -1,18 +1,20 @@
 import React from "react";
 import styled from "styled-components";
 import { SearchedKeywordItem } from "./SearchedKeywordItem";
+import { useSearchVals, useSearchActions } from "../providers/SearchProvider";
 
 interface SearchedKeywordCardProps {
   recommendedData: string[];
   cachedData: string[];
-  onClickSearchedKeyword: (searchedKeyword: string) => void;
 }
 
 export const SearchedKeywordCard = ({
   recommendedData,
   cachedData,
-  onClickSearchedKeyword,
 }: SearchedKeywordCardProps) => {
+  const { focusedRecommendSearchItemIndex } = useSearchVals();
+  const { submitSearchKeyword } = useSearchActions();
+
   return (
     <StyledSearchedKeywordCard>
       {cachedData.length > 0 && (
@@ -22,7 +24,7 @@ export const SearchedKeywordCard = ({
             <SearchedKeywordItem
               key={keyword}
               label={keyword}
-              onClickItem={() => onClickSearchedKeyword(keyword)}
+              onClickItem={() => submitSearchKeyword(keyword)}
             />
           ))}
           <div className="searched-keyword-line" />
@@ -31,11 +33,12 @@ export const SearchedKeywordCard = ({
       <div className="searched-keyword-label">추천 검색어</div>
       {recommendedData.length > 0 ? (
         <>
-          {recommendedData.map((keyword: string) => (
+          {recommendedData.map((keyword: string, index: number) => (
             <SearchedKeywordItem
+              focused={focusedRecommendSearchItemIndex === index}
               key={keyword}
               label={keyword}
-              onClickItem={() => onClickSearchedKeyword(keyword)}
+              onClickItem={() => submitSearchKeyword(keyword)}
             />
           ))}
         </>

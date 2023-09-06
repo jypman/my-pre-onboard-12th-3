@@ -14,10 +14,7 @@ export const Home = () => {
         </h2>
         <div className="search-form-wrapper">
           <SearchProvider searchType="sick">
-            <SearchForm
-              placeHolder="질환명을 입력해주세요."
-              onSearch={() => {}}
-            />
+            <SearchForm placeHolder="질환명을 입력해주세요." />
           </SearchProvider>
         </div>
       </div>

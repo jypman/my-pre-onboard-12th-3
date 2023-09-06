@@ -6,12 +6,10 @@ import { useSearchActions, useSearchVals } from "../providers/SearchProvider";
 
 interface SearchFormProps {
   placeHolder?: string;
-  onSearch: (searchText: string) => void;
 }
 
 export const SearchForm = ({
   placeHolder = "검색어를 입력해주세요.",
-  onSearch,
 }: SearchFormProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,7 +24,7 @@ export const SearchForm = ({
   const {
     typeSearchedKeyword,
     initSearchedKeyword,
-    cacheSearchedData,
+    submitSearchKeyword,
     openSearchedKeywordCard,
   } = useSearchActions();
 
@@ -70,10 +68,7 @@ export const SearchForm = ({
         <div
           className="search-btn"
           onClick={() => {
-            if (searchText.length > 0) {
-              cacheSearchedData(searchText);
-              onSearch(searchText);
-            }
+            submitSearchKeyword(searchText);
           }}
         >
           <Icon src="/search.svg" color="#ffffff" />
@@ -84,7 +79,6 @@ export const SearchForm = ({
           <SearchedKeywordCard
             recommendedData={recommendedData}
             cachedData={cachedData}
-            onClickSearchedKeyword={onSearch}
           />
         </div>
       )}
