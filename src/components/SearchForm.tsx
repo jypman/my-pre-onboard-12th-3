@@ -13,13 +13,7 @@ export const SearchForm = ({
 }: SearchFormProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    searchText,
-    recommendedData,
-    cachedData,
-    isFocusSearchForm,
-    searchFormRef,
-  } = useSearchVals();
+  const { searchText, isFocusSearchForm, searchFormRef } = useSearchVals();
 
   const {
     typeSearchedKeyword,
@@ -76,10 +70,7 @@ export const SearchForm = ({
       </div>
       {isFocusSearchForm && (
         <div className="searched-keyword-card-wrapper">
-          <SearchedKeywordCard
-            recommendedData={recommendedData}
-            cachedData={cachedData}
-          />
+          <SearchedKeywordCard />
         </div>
       )}
     </StyledSearchForm>

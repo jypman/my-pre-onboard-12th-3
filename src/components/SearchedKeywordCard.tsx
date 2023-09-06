@@ -3,16 +3,9 @@ import styled from "styled-components";
 import { SearchedKeywordItem } from "./SearchedKeywordItem";
 import { useSearchVals, useSearchActions } from "../providers/SearchProvider";
 
-interface SearchedKeywordCardProps {
-  recommendedData: string[];
-  cachedData: string[];
-}
-
-export const SearchedKeywordCard = ({
-  recommendedData,
-  cachedData,
-}: SearchedKeywordCardProps) => {
-  const { focusedRecommendSearchItemIndex } = useSearchVals();
+export const SearchedKeywordCard = () => {
+  const { focusedRecommendSearchItemIndex, recommendedData, cachedData } =
+    useSearchVals();
   const { submitSearchKeyword } = useSearchActions();
 
   return (
