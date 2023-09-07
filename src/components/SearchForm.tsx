@@ -81,7 +81,7 @@ const StyledSearchForm = styled.section`
   width: 100%;
   position: relative;
   .search-form-wrapper {
-    width: 100%; //
+    width: 100%;
     background-color: #ffffff;
     box-sizing: border-box;
     display: flex;
@@ -109,16 +109,19 @@ const StyledSearchForm = styled.section`
     .input-wrapper {
       display: flex;
       align-items: center;
+      gap: 3px;
+      width: 100%;
       input {
-        width: calc(490px - 120px);
+        width: 100%;
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
         outline: none;
         border: none;
+        padding: 0;
+        margin: 0;
         font-weight: 400;
         font-size: 1.125rem;
-        padding: 0 3px 0 0;
         &:focus {
           outline: none !important;
         }
@@ -128,8 +131,8 @@ const StyledSearchForm = styled.section`
         justify-content: center;
         align-items: center;
         background-color: #a7afb7;
-        width: 22px;
-        height: 22px;
+        min-width: 22px;
+        min-height: 22px;
         border-radius: 100%;
         cursor: pointer;
       }
@@ -137,8 +140,9 @@ const StyledSearchForm = styled.section`
     .search-btn {
       border-radius: 100%;
       background-color: #007be9;
-      width: 48px;
-      height: 48px;
+      margin-left: 10px;
+      min-width: 48px;
+      min-height: 48px;
       display: flex;
       justify-content: center;
       align-items: center;
