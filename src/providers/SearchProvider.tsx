@@ -91,34 +91,55 @@ export const SearchProvider = ({
 
   const submitSearchKeyword = (searchedData: string): void => {
     if (searchedData.length > 0) {
+      exploreCachedData((cacheKey: string) => {
+        deleteDuplicatedCachedData(searchedData, cacheKey);
+      });
       cacheSearchedData(searchedData);
       navigate(`/search?q=${searchedData}`);
     }
   };
 
-  const getCacheData = (): string[] => {
-    const cachedData: string[] = [];
-
-    Object.keys(window.localStorage).forEach((cacheKey: string) => {
-      if (cacheKey.indexOf(cacheKeyPrefix) === -1) return;
-
-      const cachedDate: number = Number(cacheKey.replace(cacheKeyPrefix, ""));
-      const now = new Date().getTime();
-      if (now > cachedDate + EXPIRED_CACHED_SEARCH_TIME) {
-        window.localStorage.removeItem(cacheKey);
-        return;
-      }
-
-      cachedData.push(window.localStorage.getItem(cacheKey) as string);
+  const exploreCachedData = (callback: (cacheKey: string) => void) => {
+    Object.keys(window.localStorage).forEach((cacheKey: string | undefined) => {
+      if (!cacheKey || cacheKey.indexOf(cacheKeyPrefix) === -1) return;
+      callback(cacheKey);
     });
+  };
 
-    return cachedData;
+  const getSearchedCacheData = (cacheKey: string): string => {
+    return window.localStorage.getItem(cacheKey) as string;
+  };
+
+  const deleteExpiredSearchedCacheData = (cacheKey: string): void => {
+    const cachedDate: number = Number(cacheKey.replace(cacheKeyPrefix, ""));
+    const now = new Date().getTime();
+    if (now > cachedDate + EXPIRED_CACHED_SEARCH_TIME) {
+      window.localStorage.removeItem(cacheKey);
+    }
+  };
+
+  const deleteDuplicatedCachedData = (
+    searchedData: string,
+    cacheKey: string,
+  ): void => {
+    if (searchedData === getSearchedCacheData(cacheKey)) {
+      window.localStorage.removeItem(cacheKey);
+    }
   };
 
   useEffect(() => {
-    if (isFocusSearchForm) {
-      setCachedData(getCacheData());
-    }
+    const updateSearchedCacheData = () => {
+      if (isFocusSearchForm) {
+        const cachedData: string[] = [];
+        exploreCachedData((cacheKey: string) => {
+          deleteExpiredSearchedCacheData(cacheKey);
+          cachedData.push(getSearchedCacheData(cacheKey));
+        });
+        setCachedData(cachedData);
+      }
+    };
+
+    updateSearchedCacheData();
   }, [isFocusSearchForm]);
 
   useEffect(() => {
