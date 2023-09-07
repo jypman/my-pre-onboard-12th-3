@@ -84,17 +84,13 @@ export const SearchProvider = ({
   const DAY = HOUR * 24;
   const EXPIRED_CACHED_SEARCH_TIME = DAY * 3;
 
-  const cacheSearchedData = (searchedData: string): void => {
+  const cacheSearchedData = (searchedData: string[]): void => {
     const cacheKey = `${cacheKeyPrefix}${new Date().getTime().toString()}`;
-    window.localStorage.setItem(cacheKey, searchedData);
+    window.localStorage.setItem(cacheKey, JSON.stringify(searchedData));
   };
 
   const submitSearchKeyword = (searchedData: string): void => {
     if (searchedData.length > 0) {
-      exploreCachedData((cacheKey: string) => {
-        deleteDuplicatedCachedData(searchedData, cacheKey);
-      });
-      cacheSearchedData(searchedData);
       navigate(`/search?q=${searchedData}`);
     }
   };
@@ -106,8 +102,9 @@ export const SearchProvider = ({
     });
   };
 
-  const getSearchedCacheData = (cacheKey: string): string => {
-    return window.localStorage.getItem(cacheKey) as string;
+  const getSearchedCacheData = (cacheKey: string): string[] => {
+    const val = window.localStorage.getItem(cacheKey);
+    return val === null ? [] : JSON.parse(val);
   };
 
   const deleteExpiredSearchedCacheData = (cacheKey: string): void => {
@@ -119,10 +116,14 @@ export const SearchProvider = ({
   };
 
   const deleteDuplicatedCachedData = (
-    searchedData: string,
+    searchedText: string,
     cacheKey: string,
   ): void => {
-    if (searchedData === getSearchedCacheData(cacheKey)) {
+    if (
+      getSearchedCacheData(cacheKey).some((cachedKeyword) =>
+        cachedKeyword.includes(searchedText),
+      )
+    ) {
       window.localStorage.removeItem(cacheKey);
     }
   };
@@ -133,14 +134,15 @@ export const SearchProvider = ({
         const cachedData: string[] = [];
         exploreCachedData((cacheKey: string) => {
           deleteExpiredSearchedCacheData(cacheKey);
-          cachedData.push(getSearchedCacheData(cacheKey));
+          const data = getSearchedCacheData(cacheKey);
+          if (data.length > 0) cachedData.push(...data);
         });
         setCachedData(cachedData);
       }
     };
 
     updateSearchedCacheData();
-  }, [isFocusSearchForm]);
+  }, [isFocusSearchForm, searchText]);
 
   useEffect(() => {
     const onOutsideClickedSearchForm = (event: MouseEvent): void => {
@@ -214,13 +216,18 @@ export const SearchProvider = ({
       switch (searchType) {
         case "sick":
           const data = await getSickList(searchText);
-          setRecommendedData(
-            data.reduce(
-              (acc: string[], item) =>
-                acc.length < MAX_DATA_LENGTH ? [...acc, item.sickNm] : [...acc],
-              [],
-            ),
+          const parsedData = data.reduce(
+            (acc: string[], item) =>
+              acc.length < MAX_DATA_LENGTH ? [...acc, item.sickNm] : [...acc],
+            [],
           );
+          if (parsedData.length > 0) {
+            exploreCachedData((cacheKey: string) => {
+              deleteDuplicatedCachedData(searchText, cacheKey);
+            });
+            cacheSearchedData(parsedData);
+          }
+          setRecommendedData(parsedData);
           break;
         default:
           break;
