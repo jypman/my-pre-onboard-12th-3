@@ -92,7 +92,7 @@ export const SearchProvider = ({
   const submitSearchKeyword = (searchedData: string): void => {
     if (searchedData.length > 0) {
       cacheSearchedData(searchedData);
-      navigate("/");
+      navigate(`/search?q=${searchedData}`);
     }
   };
 
@@ -143,11 +143,11 @@ export const SearchProvider = ({
     const onKeyboardFocusedRecommendSearchItemIndex = (
       event: KeyboardEvent,
     ): void => {
-      if (recommendedData.length === 0) return;
       if (event.isComposing) return;
       if (event.key === "Enter") {
         return submitSearchKeyword(searchText);
       }
+      if (recommendedData.length === 0) return;
 
       let updateIndex: number | null = focusedRecommendSearchItemIndex;
       if (event.key === "ArrowUp") {
