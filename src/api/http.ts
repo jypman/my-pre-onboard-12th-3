@@ -1,19 +1,16 @@
 import axios, { isAxiosError } from "axios";
 import { BASE_URL } from "./config";
-import {
-  getCacheData,
-  cacheData,
-  deleteExpiredSearchedCacheData,
-} from "../utils/cache";
+import { getValidCacheData, cacheData } from "../utils/cache";
+import { getLocalStorage } from "../utils/localstorage";
 
-export const SICK_CACHE_KEY_PREFIX = "cached_sick_keyword_";
+export const CACHE_KEY_PREFIX = "cached_keyword_";
 
 export interface ResponseDataType {
   message: string;
   statusCode: number;
 }
 
-export const sickApi = axios.create({
+export const cacheApi = axios.create({
   baseURL: BASE_URL,
 });
 
@@ -37,30 +34,24 @@ export const handleError = (err: any) => {
   }
 };
 
-sickApi.interceptors.request.use((config) => {
+cacheApi.interceptors.request.use((config) => {
   console.info("calling api");
-  const toCacheKey = `${SICK_CACHE_KEY_PREFIX}-${config.url}`;
-  const cachedData = getCacheData(toCacheKey);
-  if (cachedData.expireTime)
-    deleteExpiredSearchedCacheData(toCacheKey, cachedData.expireTime);
-  if (cachedData.data.length > 0) {
+  const toCacheKey = `${CACHE_KEY_PREFIX}-${config.url}`;
+  const validCacheData = getValidCacheData(toCacheKey);
+  if (validCacheData) {
     return {
       ...config,
-      data: cachedData.data.map((item: string) => ({
-        sickCd: item,
-        sickNm: item,
-      })),
+      data: validCacheData,
     };
   }
   return config;
 });
 
-sickApi.interceptors.response.use((response) => {
-  const toCacheKey = `${SICK_CACHE_KEY_PREFIX}-${response.config.url}`;
-  const cachedData = getCacheData(toCacheKey);
-  const searchText = response.config.url?.replace("/sick?q=", "");
-  if (cachedData.data.length === 0 && searchText?.length !== 0) {
-    cacheData(response.data, toCacheKey);
+cacheApi.interceptors.response.use((response) => {
+  const toCacheKey = `${CACHE_KEY_PREFIX}-${response.config.url}`;
+  const isServerData = getLocalStorage(toCacheKey) === null;
+  if (isServerData) {
+    cacheData(toCacheKey, response.data);
   }
   return response.data;
 });

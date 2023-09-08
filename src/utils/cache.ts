@@ -1,4 +1,5 @@
 import { IResponseSick } from "../api/sick";
+import { getLocalStorage } from "./localstorage";
 
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;
@@ -11,25 +12,32 @@ export interface ICacheData {
 
 type CacheType = IResponseSick | string;
 
-export const cacheData = (toCacheData: CacheType[], cacheKey: string): void => {
+export const cacheData = (cacheKey: string, toCacheData: CacheType[]): void => {
   window.localStorage.setItem(
     cacheKey,
     JSON.stringify({ expireTime: new Date().getTime(), data: toCacheData }),
   );
 };
 
-export const getCacheData = (cacheKey: string): ICacheData => {
-  const val = window.localStorage.getItem(cacheKey);
+export const getCachedData = (cacheKey: string): ICacheData => {
+  const val = getLocalStorage(cacheKey);
   return val === null ? { data: [], expireTime: null } : JSON.parse(val);
 };
 
-export const deleteExpiredSearchedCacheData = (
+export const deleteExpiredCacheData = (
   cacheKey: string,
-  cachedDate: string,
+  cachedDate: number,
 ): void => {
-  const toNumberCachedDate: number = Number(cachedDate);
   const now = new Date().getTime();
-  if (now > toNumberCachedDate + EXPIRED_CACHED_SEARCH_TIME) {
+  if (now > cachedDate + EXPIRED_CACHED_SEARCH_TIME) {
     window.localStorage.removeItem(cacheKey);
   }
+};
+
+export const getValidCacheData = (cacheKey: string): ICacheData | null => {
+  const cachedData: ICacheData = getCachedData(cacheKey);
+  if (cachedData.expireTime) {
+    deleteExpiredCacheData(cacheKey, Number(cachedData.expireTime));
+  }
+  return getLocalStorage(cacheKey) ? cachedData : null;
 };
