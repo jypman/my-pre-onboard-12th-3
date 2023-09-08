@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSickList } from "../api/sick";
+import { getSick } from "../api/sick";
 import { handleError } from "../api/http";
 import { debounce } from "../utils";
 
@@ -15,7 +15,6 @@ export type SearchType = "sick";
 
 interface ISearchVals {
   searchText: string;
-  cachedData: string[];
   recommendedData: string[];
   isFocusSearchForm: boolean;
   searchFormRef: React.Ref<HTMLDivElement>;
@@ -29,9 +28,13 @@ interface ISearchActions {
   openSearchedKeywordCard: () => void;
 }
 
+interface SearchProviderProps {
+  searchType: SearchType;
+  children: React.ReactElement;
+}
+
 const SearchValsCtx = createContext<ISearchVals>({
   searchText: "",
-  cachedData: [],
   recommendedData: [],
   isFocusSearchForm: false,
   searchFormRef: null,
@@ -60,11 +63,6 @@ export const useSearchActions = () => {
   return val;
 };
 
-interface SearchProviderProps {
-  searchType: SearchType;
-  children: React.ReactElement;
-}
-
 export const SearchProvider = ({
   searchType,
   children,
@@ -72,77 +70,16 @@ export const SearchProvider = ({
   const [isFocusSearchForm, setIsFocusSearchForm] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>("");
   const [recommendedData, setRecommendedData] = useState<string[]>([]);
-  const [cachedData, setCachedData] = useState<string[]>([]);
+  const [focusedRecommendSearchItemIndex, setFocusedRecommendSearchItemIndex] =
+    useState<number | null>(null);
   const searchFormRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const MAX_DATA_LENGTH = 7;
-
-  const cacheKeyPrefix = "CACHED_SEARCH_DATE_";
-  const SECOND = 1000;
-  const MINUTE = SECOND * 60;
-  const HOUR = MINUTE * 60;
-  const DAY = HOUR * 24;
-  const EXPIRED_CACHED_SEARCH_TIME = DAY * 3;
-
-  const cacheSearchedData = (searchedData: string[]): void => {
-    const cacheKey = `${cacheKeyPrefix}${new Date().getTime().toString()}`;
-    window.localStorage.setItem(cacheKey, JSON.stringify(searchedData));
-  };
 
   const submitSearchKeyword = (searchedData: string): void => {
     if (searchedData.length > 0) {
       navigate(`/search?q=${searchedData}`);
     }
   };
-
-  const exploreCachedData = (callback: (cacheKey: string) => void) => {
-    Object.keys(window.localStorage).forEach((cacheKey: string | undefined) => {
-      if (!cacheKey || cacheKey.indexOf(cacheKeyPrefix) === -1) return;
-      callback(cacheKey);
-    });
-  };
-
-  const getSearchedCacheData = (cacheKey: string): string[] => {
-    const val = window.localStorage.getItem(cacheKey);
-    return val === null ? [] : JSON.parse(val);
-  };
-
-  const deleteExpiredSearchedCacheData = (cacheKey: string): void => {
-    const cachedDate: number = Number(cacheKey.replace(cacheKeyPrefix, ""));
-    const now = new Date().getTime();
-    if (now > cachedDate + EXPIRED_CACHED_SEARCH_TIME) {
-      window.localStorage.removeItem(cacheKey);
-    }
-  };
-
-  const deleteDuplicatedCachedData = (
-    searchedText: string,
-    cacheKey: string,
-  ): void => {
-    if (
-      getSearchedCacheData(cacheKey).some((cachedKeyword) =>
-        cachedKeyword.includes(searchedText),
-      )
-    ) {
-      window.localStorage.removeItem(cacheKey);
-    }
-  };
-
-  useEffect(() => {
-    const updateSearchedCacheData = () => {
-      if (isFocusSearchForm) {
-        const cachedData: string[] = [];
-        exploreCachedData((cacheKey: string) => {
-          deleteExpiredSearchedCacheData(cacheKey);
-          const data = getSearchedCacheData(cacheKey);
-          if (data.length > 0) cachedData.push(...data);
-        });
-        setCachedData(cachedData);
-      }
-    };
-
-    updateSearchedCacheData();
-  }, [isFocusSearchForm, searchText]);
 
   useEffect(() => {
     const onOutsideClickedSearchForm = (event: MouseEvent): void => {
@@ -159,37 +96,33 @@ export const SearchProvider = ({
     };
   }, [searchFormRef]);
 
-  const [focusedRecommendSearchItemIndex, setFocusedRecommendSearchItemIndex] =
-    useState<number | null>(null);
-
   useEffect(() => {
+    const getUpdatedRecommendedSearchKeywordFocusIndex = (
+      event: KeyboardEvent,
+    ): number | null => {
+      let updateIndex: number | null = focusedRecommendSearchItemIndex;
+      if (event.key === "ArrowUp") {
+        updateIndex = !updateIndex ? recommendedData.length - 1 : --updateIndex;
+      }
+      if (event.key === "ArrowDown") {
+        updateIndex =
+          updateIndex === recommendedData.length - 1 || updateIndex === null
+            ? 0
+            : ++updateIndex;
+      }
+      return updateIndex;
+    };
     const onKeyboardFocusedRecommendSearchItemIndex = (
       event: KeyboardEvent,
     ): void => {
       if (event.isComposing) return;
-      if (event.key === "Enter") {
-        return submitSearchKeyword(searchText);
-      }
+      if (event.key === "Enter") return submitSearchKeyword(searchText);
       if (recommendedData.length === 0) return;
 
-      let updateIndex: number | null = focusedRecommendSearchItemIndex;
-      if (event.key === "ArrowUp") {
-        updateIndex =
-          updateIndex === 0 || updateIndex === null
-            ? recommendedData.length - 1
-            : --updateIndex;
-      }
-      if (event.key === "ArrowDown") {
-        updateIndex =
-          (typeof updateIndex === "number" &&
-            updateIndex + 1 === recommendedData.length) ||
-          updateIndex === null
-            ? 0
-            : ++updateIndex;
-      }
+      const updateIndex = getUpdatedRecommendedSearchKeywordFocusIndex(event);
       if (updateIndex === focusedRecommendSearchItemIndex) return;
 
-      setFocusedRecommendSearchItemIndex(() => updateIndex);
+      setFocusedRecommendSearchItemIndex(updateIndex);
       setSearchText(
         recommendedData.find((_, index: number) => index === updateIndex) ?? "",
       );
@@ -210,23 +143,15 @@ export const SearchProvider = ({
     if (!isFocusSearchForm) setIsFocusSearchForm(true);
   };
 
-  const updateSearchList = async (searchText: string): Promise<void> => {
+  const updateSearchList = async (
+    searchText: string,
+    searchType: SearchType,
+  ): Promise<void> => {
     try {
-      console.info("calling api");
       switch (searchType) {
         case "sick":
-          const data = await getSickList(searchText);
-          const parsedData = data.reduce(
-            (acc: string[], item) =>
-              acc.length < MAX_DATA_LENGTH ? [...acc, item.sickNm] : [...acc],
-            [],
-          );
-          if (parsedData.length > 0) {
-            exploreCachedData((cacheKey: string) => {
-              deleteDuplicatedCachedData(searchText, cacheKey);
-            });
-            cacheSearchedData(parsedData);
-          }
+          const data = await getSick(searchText);
+          const parsedData = data.map((item) => item.sickNm);
           setRecommendedData(parsedData);
           break;
         default:
@@ -238,7 +163,7 @@ export const SearchProvider = ({
   };
 
   const debouncedUpdateSearchList = debounce((searchText: string): void => {
-    updateSearchList(searchText);
+    updateSearchList(searchText, searchType);
   }, 200);
 
   const typeSearchedKeyword = (
@@ -250,8 +175,8 @@ export const SearchProvider = ({
   };
 
   const initSearchedKeyword = (callback: Function): void => {
-    setSearchText("");
     setRecommendedData([]);
+    setSearchText("");
     setFocusedRecommendSearchItemIndex(null);
     callback();
   };
@@ -259,7 +184,6 @@ export const SearchProvider = ({
   const searchVals = useMemo<ISearchVals>(
     () => ({
       searchText,
-      cachedData,
       recommendedData,
       isFocusSearchForm,
       searchFormRef,
@@ -267,7 +191,6 @@ export const SearchProvider = ({
     }),
     [
       searchText,
-      cachedData,
       recommendedData,
       isFocusSearchForm,
       searchFormRef,
@@ -277,7 +200,6 @@ export const SearchProvider = ({
 
   const searchActions = useMemo<ISearchActions>(
     () => ({
-      updateSearchList,
       typeSearchedKeyword,
       initSearchedKeyword,
       submitSearchKeyword,

@@ -4,31 +4,17 @@ import { SearchedKeywordItem } from "./SearchedKeywordItem";
 import { useSearchVals, useSearchActions } from "../providers/SearchProvider";
 
 export const SearchedKeywordCard = () => {
-  const { focusedRecommendSearchItemIndex, recommendedData, cachedData } =
-    useSearchVals();
+  const { focusedRecommendSearchItemIndex, recommendedData } = useSearchVals();
   const { submitSearchKeyword } = useSearchActions();
 
   return (
     <StyledSearchedKeywordCard>
-      {cachedData.length > 0 && (
-        <>
-          <div className="searched-keyword-label">최근 검색어</div>
-          {cachedData.map((keyword: string) => (
-            <SearchedKeywordItem
-              key={keyword}
-              label={keyword}
-              onClickItem={() => submitSearchKeyword(keyword)}
-            />
-          ))}
-          <div className="searched-keyword-line" />
-        </>
-      )}
       <div className="searched-keyword-label">추천 검색어</div>
       {recommendedData.length > 0 ? (
         <>
           {recommendedData.map((keyword: string, index: number) => (
             <SearchedKeywordItem
-              focused={focusedRecommendSearchItemIndex === index}
+              $focused={focusedRecommendSearchItemIndex === index}
               key={keyword}
               label={keyword}
               onClickItem={() => submitSearchKeyword(keyword)}
