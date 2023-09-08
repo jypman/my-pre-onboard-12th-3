@@ -1,3 +1,5 @@
+import { IResponseSick } from "./api/sick";
+
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;
 export const EXPIRED_CACHED_SEARCH_TIME = MINUTE * 3;
@@ -7,7 +9,9 @@ export interface ICacheData {
   expireTime: string | null;
 }
 
-export const cacheData = (toCacheData: any[], cacheKey: string): void => {
+type CacheType = IResponseSick | string;
+
+export const cacheData = (toCacheData: CacheType[], cacheKey: string): void => {
   window.localStorage.setItem(
     cacheKey,
     JSON.stringify({ expireTime: new Date().getTime(), data: toCacheData }),
