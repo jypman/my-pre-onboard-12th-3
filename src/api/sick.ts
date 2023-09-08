@@ -1,4 +1,4 @@
-import { sickApi } from "./http";
+import { cacheApi } from "./http";
 import { API } from "./config";
 
 export interface IResponseSick {
@@ -6,5 +6,5 @@ export interface IResponseSick {
   sickNm: string;
 }
 export const getSick = async (searchKey: string): Promise<IResponseSick[]> => {
-  return sickApi.get(`${API.SICK}?q=${searchKey}`);
+  return cacheApi.get(`${API.SICK}?q=${searchKey}`);
 };

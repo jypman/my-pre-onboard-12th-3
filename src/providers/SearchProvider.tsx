@@ -9,7 +9,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { getSick } from "../api/sick";
 import { handleError } from "../api/http";
-import { debounce } from "../utils";
+import { debounce } from "../utils/utils";
 
 export type SearchType = "sick";
 
@@ -169,9 +169,14 @@ export const SearchProvider = ({
   const typeSearchedKeyword = (
     e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
+    const typedVal = e.target.value;
     setFocusedRecommendSearchItemIndex(null);
-    setSearchText(e.target.value);
-    debouncedUpdateSearchList(e.target.value);
+    setSearchText(typedVal);
+    if (typedVal.length === 0) {
+      setRecommendedData([]);
+    } else {
+      debouncedUpdateSearchList(typedVal);
+    }
   };
 
   const initSearchedKeyword = (callback: Function): void => {
