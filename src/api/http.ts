@@ -41,6 +41,8 @@ sickApi.interceptors.request.use((config) => {
   console.info("calling api");
   const toCacheKey = `${SICK_CACHE_KEY_PREFIX}-${config.url}`;
   const cachedData = getCacheData(toCacheKey);
+  if (cachedData.expireTime)
+    deleteExpiredSearchedCacheData(toCacheKey, cachedData.expireTime);
   if (cachedData.data.length > 0) {
     return {
       ...config,
@@ -56,12 +58,9 @@ sickApi.interceptors.request.use((config) => {
 sickApi.interceptors.response.use((response) => {
   const toCacheKey = `${SICK_CACHE_KEY_PREFIX}-${response.config.url}`;
   const cachedData = getCacheData(toCacheKey);
-  if (cachedData.data.length > 0 && cachedData.expireTime) {
-    deleteExpiredSearchedCacheData(toCacheKey, cachedData.expireTime);
-  } else {
-    const searchText = response.config.url?.replace("/sick?q=", "");
-    if (searchText && searchText.length > 0)
-      cacheData(response.data, toCacheKey);
+  const searchText = response.config.url?.replace("/sick?q=", "");
+  if (cachedData.data.length === 0 && searchText?.length !== 0) {
+    cacheData(response.data, toCacheKey);
   }
   return response.data;
 });

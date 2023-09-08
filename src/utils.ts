@@ -2,7 +2,7 @@ import { IResponseSick } from "./api/sick";
 
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;
-export const EXPIRED_CACHED_SEARCH_TIME = MINUTE * 3;
+export const EXPIRED_CACHED_SEARCH_TIME = MINUTE;
 
 export interface ICacheData {
   data: string[];
