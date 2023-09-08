@@ -4,7 +4,7 @@ import { Icon } from "./Icon";
 
 interface IStyledSearchedKeywordItem {
   onClickItem?: () => void;
-  focused?: boolean;
+  $focused?: boolean;
 }
 
 interface SearchedKeywordItemProps extends IStyledSearchedKeywordItem {
@@ -14,13 +14,13 @@ interface SearchedKeywordItemProps extends IStyledSearchedKeywordItem {
 export const SearchedKeywordItem = ({
   label,
   onClickItem,
-  focused = false,
+  $focused = false,
 }: SearchedKeywordItemProps) => {
   return (
     <StyledSearchedKeywordItem
       className="searched-keyword-item"
       onClick={onClickItem}
-      focused={focused}
+      $focused={$focused}
     >
       <Icon src="/search.svg" color="#A7AFB7" />
       {label}
@@ -30,7 +30,7 @@ export const SearchedKeywordItem = ({
 
 const StyledSearchedKeywordItem = styled.div<IStyledSearchedKeywordItem>`
   background-color: ${(props) =>
-    props.focused ? "rgb(248, 249, 250)" : "#ffffff"};
+    props.$focused ? "rgb(248, 249, 250)" : "#ffffff"};
   &:hover {
     background-color: rgb(248, 249, 250);
   }

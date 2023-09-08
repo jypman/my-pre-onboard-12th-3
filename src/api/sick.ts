@@ -1,11 +1,10 @@
-import http from "./http";
+import { sickApi } from "./http";
 import { API } from "./config";
 
 export interface IResponseSick {
   sickCd: string;
   sickNm: string;
 }
-
-export const getSickList = (searchedText: string): Promise<IResponseSick[]> => {
-  return http.get(`${API.SICK}?q=${searchedText}`);
+export const getSick = async (searchKey: string): Promise<IResponseSick[]> => {
+  return sickApi.get(`${API.SICK}?q=${searchKey}`);
 };
