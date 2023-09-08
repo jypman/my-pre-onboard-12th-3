@@ -9,7 +9,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { getSick } from "../api/sick";
 import { handleError } from "../api/http";
-import { debounce } from "../utils";
+import { debounce } from "../utils/utils";
 
 export type SearchType = "sick";
 

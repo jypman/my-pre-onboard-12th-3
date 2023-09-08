@@ -4,7 +4,7 @@ import {
   getCacheData,
   cacheData,
   deleteExpiredSearchedCacheData,
-} from "../utils";
+} from "../utils/cache";
 
 export const SICK_CACHE_KEY_PREFIX = "cached_sick_keyword_";
 
