@@ -25,7 +25,11 @@ export const SearchForm = ({
   const isNoSearchText = !isFocusSearchForm && searchText.length === 0;
 
   return (
-    <StyledSearchForm ref={searchFormRef} onClick={openSearchedKeywordCard}>
+    <StyledSearchForm
+      data-testid="search-form"
+      ref={searchFormRef}
+      onClick={openSearchedKeywordCard}
+    >
       <div
         className={[
           "search-form-wrapper",
