@@ -2,6 +2,7 @@ import axios, { isAxiosError } from "axios";
 import { BASE_URL } from "./config";
 import { getValidCacheData, cacheData } from "../utils/cache";
 import { getLocalStorage } from "../utils/localstorage";
+import { printConsole } from "../utils/utils";
 
 export const CACHE_KEY_PREFIX = "cached_keyword_";
 
@@ -39,7 +40,7 @@ export const handleError = (err: any) => {
 };
 
 cacheApi.interceptors.request.use((config) => {
-  console.info("calling api");
+  printConsole("calling api");
   const toCacheKey = `${CACHE_KEY_PREFIX}${config.url}`;
   const validCacheData = getValidCacheData(toCacheKey);
   if (validCacheData) {
