@@ -158,11 +158,11 @@ describe("홈페이지", () => {
 
     userEvent.keyboard("{arrowdown}");
 
-    await delay(500);
+    await delay(200);
 
     userEvent.keyboard("[Enter]");
 
-    await delay(500);
+    await delay(200);
 
     expect(curUrl).toEqual(`/search?q=${resMockData[0].sickNm}`);
   });
